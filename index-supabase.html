@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BVMW Umfrage - KI-Situation</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Calibri', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #006B7A 0%, #004A56 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 100px 40px 40px;
+            position: relative;
+        }
+        .logos {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            border-radius: 12px 12px 0 0;
+        }
+        .logo-img {
+            height: 60px;
+            object-fit: contain;
+        }
+        .logo-img.bvmw { height: 80px; }
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .header h1 {
+            color: #006B7A;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+        .question {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+            border-left: 5px solid #D35400;
+        }
+        .question h2 {
+            color: #004A56;
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .option {
+            position: relative;
+            padding: 15px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option:hover {
+            border-color: #006B7A;
+            background: #f0f8f9;
+        }
+        .option input {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        .option label {
+            cursor: pointer;
+            display: block;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: #006B7A;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .submit-btn:hover {
+            background: #004A56;
+        }
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .results {
+            background: #f5f5f5;
+            padding: 30px;
+            border-radius: 8px;
+            margin-top: 40px;
+        }
+        .results h2 {
+            color: #006B7A;
+            font-size: 24px;
+            margin-bottom: 25px;
+        }
+        .result-item {
+            margin-bottom: 25px;
+        }
+        .result-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .result-bar {
+            height: 30px;
+            background: #ddd;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+        .result-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #006B7A, #00A896);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            padding-right: 10px;
+            min-width: 60px;
+        }
+        .result-count {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        .total-votes {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            font-weight: bold;
+            color: #333;
+        }
+        .loading { text-align: center; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logos">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120'%3E%3Ccircle cx='60' cy='60' r='50' fill='none' stroke='%23006B7A' stroke-width='6'/%3E%3C/svg%3E" alt="AgiSolutions" class="logo-img">
+            <div style="text-align: center; font-weight: bold; color: #D35400;">BVMW</div>
+            <div style="text-align: center; font-weight: bold; color: #006B7A;">einfachKI</div>
+        </div>
+
+        <div class="header">
+            <h1>BVMW Webinar</h1>
+            <p>KI-Erfolg messbar machen</p>
+        </div>
+
+        <div class="question">
+            <h2>Wie ist Ihre aktuelle KI-Situation?</h2>
+            <div class="options">
+                <div class="option">
+                    <input type="radio" id="optionA" name="situation" value="A">
+                    <label for="optionA"><strong>A</strong> — Noch keine Initiative</label>
+                </div>
+                <div class="option">
+                    <input type="radio" id="optionB" name="situation" value="B">
+                    <label for="optionB"><strong>B</strong> — KI läuft — aber ungeplant</label>
+                </div>
+                <div class="option">
+                    <input type="radio" id="optionC" name="situation" value="C">
+                    <label for="optionC"><strong>C</strong> — KI mit Zielen — braucht Nachweis</label>
+                </div>
+            </div>
+            <button class="submit-btn" onclick="submitVote()">Abstimmung abgeben</button>
+        </div>
+
+        <div class="results">
+            <h2>Live-Ergebnisse</h2>
+            <div id="resultsContainer" class="loading">Wird geladen...</div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase Config
+        const SUPABASE_URL = 'https://lmrrvregrxddtdbjieoi.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtcnJ2cmVncnhkZHRkYmppZW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMjUzNjEsImV4cCI6MjA5MTcwMTM2MX0.Nu8bxGSp8tjdHaDacI3wy9eoQo5ZMy_XvbII-vDGfCs';
+
+        const { createClient } = window.supabase;
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function initializeDatabase() {
+            // Create table if it doesn't exist
+            const { error } = await supabase
+                .from('votes')
+                .select('count', { count: 'exact', head: true });
+
+            if (error && error.message.includes('does not exist')) {
+                await supabase.rpc('create_votes_table').catch(() => {
+                    // Table creation via SQL might fail, but that's ok - it might already exist
+                });
+            }
+        }
+
+        async function submitVote() {
+            const selected = document.querySelector('input[name="situation"]:checked');
+            if (!selected) {
+                alert('Bitte wähle eine Option!');
+                return;
+            }
+
+            const { error } = await supabase
+                .from('votes')
+                .insert([{ option: selected.value, created_at: new Date() }]);
+
+            if (error) {
+                console.error('Fehler:', error);
+                alert('Fehler beim Speichern. Versuche es nochmal.');
+            } else {
+                selected.checked = false;
+                await loadResults();
+            }
+        }
+
+        async function loadResults() {
+            const { data, error } = await supabase
+                .from('votes')
+                .select('option');
+
+            if (error) {
+                console.error('Fehler beim Laden:', error);
+                document.getElementById('resultsContainer').innerHTML = 'Fehler beim Laden der Ergebnisse';
+                return;
+            }
+
+            const votes = { A: 0, B: 0, C: 0 };
+            data.forEach(row => {
+                if (votes.hasOwnProperty(row.option)) {
+                    votes[row.option]++;
+                }
+            });
+
+            const total = votes.A + votes.B + votes.C;
+            const pctA = total ? Math.round((votes.A / total) * 100) : 0;
+            const pctB = total ? Math.round((votes.B / total) * 100) : 0;
+            const pctC = total ? Math.round((votes.C / total) * 100) : 0;
+
+            document.getElementById('resultsContainer').innerHTML = `
+                <div class="result-item">
+                    <div class="result-label">A — Noch keine Initiative</div>
+                    <div class="result-bar">
+                        <div class="result-fill" style="width: ${pctA}%">${pctA}%</div>
+                    </div>
+                    <div class="result-count">${votes.A} Stimmen</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">B — KI läuft — aber ungeplant</div>
+                    <div class="result-bar">
+                        <div class="result-fill" style="width: ${pctB}%">${pctB}%</div>
+                    </div>
+                    <div class="result-count">${votes.B} Stimmen</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">C — KI mit Zielen — braucht Nachweis</div>
+                    <div class="result-bar">
+                        <div class="result-fill" style="width: ${pctC}%">${pctC}%</div>
+                    </div>
+                    <div class="result-count">${votes.C} Stimmen</div>
+                </div>
+                <div class="total-votes">Gesamt: ${total} Abstimmungen</div>
+            `;
+        }
+
+        // Start
+        (async () => {
+            await initializeDatabase();
+            await loadResults();
+            setInterval(loadResults, 2000); // Refresh every 2 seconds
+        })();
+    </script>
+</body>
+</html>
